@@ -68,7 +68,7 @@ export class OrderController {
       BigInt(request.user!.id),
     );
   }
-
+  @Roles(['ADMIN'])
   @Post(':id/complete')
   completeOrder(
     @Param('id') id: string,

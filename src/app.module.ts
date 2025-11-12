@@ -9,6 +9,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { ProductModule } from './modules/product/product.module';
 import { FileModule } from './modules/file/file.module';
 import { OrderModule } from './modules/order/order.module';
+import { TransactionModule } from './modules/transaction/transaction.module';
 
 
 @Module({
@@ -22,6 +23,7 @@ import { OrderModule } from './modules/order/order.module';
     ProductModule,
     FileModule,
     OrderModule,
+    TransactionModule,
   ],
   providers: [
     {
