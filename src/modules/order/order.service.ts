@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import type {
   CreateOrderDTO,
   CreateOrderReturnDTO,
   OrderOverviewResponseDTO,
+  UpdateOrderStatusDTO,
 } from './types/order.dto';
 import { DatabaseService } from '../database/database.service';
 import { MoneyUtil } from 'src/utils/money.util';
@@ -111,9 +112,31 @@ export class OrderService {
     });
   }
 
-  // update(id: number, updateOrderDto: UpdateOrderDto) {
-  //   return `This action updates a #${id} order`;
-  // }
+  async completeOrder(id: string): Promise<OrderOverviewResponseDTO> {
+
+      return await this.prismaService.$transaction(async(tx) => {
+          const order = await tx.order.findUniqueOrThrow({
+            where: { id: BigInt(id) },
+          });
+
+          if(order.orderStatus === "SUCCESS")  throw new ConflictException(`Order is already completed`);
+
+          const update = await tx.order.update({
+            where: {id: BigInt(id)},
+            data: {
+              orderStatus: 'SUCCESS',
+              updatedAt: new Date()
+            },
+            include: {
+              orderProducts: true,
+              orderReturns: true,
+              transactions: true,
+            }
+          });
+
+          return update;
+      })
+  }
 
   remove(id: number) {
     return `This action removes a #${id} order`;

@@ -29,7 +29,7 @@ import {
 import { Roles } from 'src/decorators/roles.decorator';
 
 @Controller('product')
-@Roles(['MERCHANT'])
+@Roles(['MERCHANT', 'ADMIN'])
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
@@ -45,7 +45,7 @@ export class ProductController {
     return this.productService.create(createProductDto, request.user, file);
   }
 
-  @Roles(['MERCHANT', 'CUSTOMER'])
+  @Roles(['MERCHANT', 'CUSTOMER', 'ADMIN'])
   @Get()
   findAll(@Query(new ZodValidationPipe(productSchema)) query: ProductQuery) {
     return this.productService.findAll(query);
