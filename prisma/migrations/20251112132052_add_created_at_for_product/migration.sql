@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `order_returns` MODIFY `status` ENUM('PICKED', 'PENDING', 'REFUND') NOT NULL DEFAULT 'PENDING';
+
+-- AlterTable
+ALTER TABLE `products` ADD COLUMN `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3);

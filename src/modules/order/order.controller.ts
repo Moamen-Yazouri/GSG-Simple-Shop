@@ -73,8 +73,6 @@ export class OrderController {
   completeOrder(
     @Param('id') id: string,
   ): Promise<OrderOverviewResponseDTO> {
-    return this.orderService.completeOrder(
-      id,
-    );
+    return this.orderService.completeOrder(id);
   }
 }

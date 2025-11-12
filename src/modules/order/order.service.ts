@@ -76,10 +76,12 @@ export class OrderService {
   ): Promise<PaginatedResult<OrderOverviewResponseDTO>> {
     return this.prismaService.$transaction(async (prisma) => {
       const pagination = this.prismaService.handleQueryPagination(query);
-
+      const orderBy = this.prismaService.handleSortByQuery(query);
+      
       const orders = await prisma.order.findMany({
         ...removeFields(pagination, ['page']),
         where: { userId },
+        orderBy,
         include: {
           orderProducts: true,
           orderReturns: true,

@@ -69,7 +69,7 @@ model Product {
   description String  @db.Text
   price       Decimal @db.Decimal(8, 2)
   merchantId  BigInt  @map("merchant_id") @db.UnsignedBigInt
-
+  createdAt DateTime @default(now()) @map("created_at")
   isDeleted     Boolean        @default(false) @map("is_deleted")
   // Relations
   orderProducts OrderProduct[]

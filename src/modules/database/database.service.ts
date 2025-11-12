@@ -34,4 +34,13 @@ export class DatabaseService extends PrismaClient implements OnModuleInit {
       },
     };
   }
+
+  handleSortByQuery(query: PaginationQueryType) {
+    if(!query.sortBy) return undefined;
+
+    const sortBy = query.sortBy ?? "createdAt";
+    const sortOrder = "desc";
+
+    return { [sortBy]: sortOrder };
+  }
 }
