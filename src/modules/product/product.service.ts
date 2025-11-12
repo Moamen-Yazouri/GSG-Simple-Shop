@@ -6,6 +6,7 @@ import type { CreateProductDTO, UpdateProductDTO } from './types/product.dto';
 import { FileService } from '../file/file.service';
 import { SideEffectQueue } from 'src/utils/side-effects';
 import { removeFields } from 'src/utils/object.util';
+import { Roles } from 'src/decorators/roles.decorator';
 
 @Injectable()
 export class ProductService {
@@ -112,7 +113,7 @@ export class ProductService {
     await sideEffects.runAll();
     return updatedProduct;
   }
-
+  @Roles(['ADMIN'])
   remove(id: number, user: Express.Request['user']) {
     return this.prismaService.product.update({
       where: { id, merchantId: Number(user!.id) },
