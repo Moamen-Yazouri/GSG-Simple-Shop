@@ -81,5 +81,11 @@ export class OrderController {
     return this.orderService.pickReturn(id);
   };
 
-
+  @Roles(['ADMIN'])
+  @Post(':id/refund-return')
+  refundReturn(
+    @Param('id') id: string,
+  ): Promise<OrderOverviewResponseDTO> {
+    return this.orderService.refundReturn(id);
+  };
 }

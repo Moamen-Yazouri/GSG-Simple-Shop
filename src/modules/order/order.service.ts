@@ -174,6 +174,41 @@ export class OrderService {
       return order;
     });
   }
+
+  async refundReturn(id: string): Promise<OrderOverviewResponseDTO> {
+    return await this.prismaService.$transaction(async(tx) => {
+      const orderReturn = await tx.orderReturn.findUniqueOrThrow({
+        where: { id: BigInt(id) },
+      });
+
+      if(orderReturn.status === "PENDING")  throw new ConflictException(`You can not refund without pick!`);
+      if(orderReturn.status === "REFUND")  throw new ConflictException(`Return is already refund!`);
+
+      await tx.orderReturn.update({
+        where: {
+          id: BigInt(id)
+        },
+        data: {
+          status: 'REFUND',
+          updatedAt: new Date(),
+        },
+      });
+
+      const order = await tx.order.findUniqueOrThrow({
+        where: {
+          id: orderReturn.orderId,
+        },
+        include: {
+          orderProducts: true,
+          orderReturns: true,
+          transactions: true,
+        }
+      });
+
+      return order;
+    });
+  }
+  
   remove(id: number) {
     return `This action removes a #${id} order`;
   }
