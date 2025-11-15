@@ -4,6 +4,7 @@ import type {
   CreateOrderReturnDTO,
   OrderOverviewResponseDTO,
   UpdateOrderStatusDTO,
+  UpdateReturnDTO,
 } from './types/order.dto';
 import { DatabaseService } from '../database/database.service';
 import { MoneyUtil } from 'src/utils/money.util';
@@ -140,11 +141,42 @@ export class OrderService {
       })
   }
 
+  async pickReturn(id: string): Promise<OrderOverviewResponseDTO> {
+    return await this.prismaService.$transaction(async(tx) => {
+      const orderReturn = await tx.orderReturn.findUniqueOrThrow({
+        where: { id: BigInt(id) },
+      });
+
+      if(orderReturn.status === "PICKED")  throw new ConflictException(`Return is already picked`);
+      if(orderReturn.status === "REFUND")  throw new ConflictException(`Return is already refund`);
+
+      await tx.orderReturn.update({
+        where: {
+          id: BigInt(id)
+        },
+        data: {
+          status: 'PICKED',
+          updatedAt: new Date(),
+        },
+      });
+
+      const order = await tx.order.findUniqueOrThrow({
+        where: {
+          id: orderReturn.orderId,
+        },
+        include: {
+          orderProducts: true,
+          orderReturns: true,
+          transactions: true,
+        }
+      });
+
+      return order;
+    });
+  }
   remove(id: number) {
     return `This action removes a #${id} order`;
   }
-
-  // helper methods
 
   private mapProductDtoToOrderProducts(
     createOrderDTO: CreateOrderDTO,

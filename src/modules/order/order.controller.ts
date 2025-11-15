@@ -13,7 +13,6 @@ import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
 import {
   createOrderDTOValidationSchema,
   createReturnDTOValidationSchema,
-  updateOrderStatusDTOValidationSchema,
 } from './util/order.validation.schema';
 import { paginationSchema } from 'src/utils/api.util';
 import type {
@@ -54,9 +53,6 @@ export class OrderController {
     return this.orderService.findOne(+id, BigInt(request.user!.id));
   }
 
-  // returns end points
-
-  // create return
   @Post('return')
   createReturn(
     @Body(new ZodValidationPipe(createReturnDTOValidationSchema))
@@ -68,11 +64,22 @@ export class OrderController {
       BigInt(request.user!.id),
     );
   }
+
   @Roles(['ADMIN'])
   @Post(':id/complete')
   completeOrder(
     @Param('id') id: string,
   ): Promise<OrderOverviewResponseDTO> {
     return this.orderService.completeOrder(id);
-  }
+  };
+
+  @Roles(['ADMIN'])
+  @Post(':id/pick-return')
+  pickReturn(
+    @Param('id') id: string,
+  ): Promise<OrderOverviewResponseDTO> {
+    return this.orderService.pickReturn(id);
+  };
+
+
 }
