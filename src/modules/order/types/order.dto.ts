@@ -38,3 +38,8 @@ export type CreateOrderReturnDTO = {
 export type UpdateOrderStatusDTO = {
   status: OrderStatus;
 }
+
+export type UpdateReturnDTO = {
+  userId: number;
+  returnId: number;
+}

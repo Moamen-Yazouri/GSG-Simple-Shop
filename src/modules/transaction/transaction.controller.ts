@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
-import { request } from 'express';
+import type  { Request } from 'express';
 import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
 import { paginationSchema } from 'src/utils/api.util';
 import type { PaginationQueryType } from 'src/types/util.types';
@@ -12,7 +12,7 @@ export class TransactionController {
  
   @Get()
   findAll(
-    @Req() request: Express.Request,
+    @Req() request: Request,
     @Query(new ZodValidationPipe(paginationSchema))
     query: PaginationQueryType,
   ) {
