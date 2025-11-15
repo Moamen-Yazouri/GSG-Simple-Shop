@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Req, Query, Patch } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Roles } from 'src/decorators/roles.decorator';
 import type {
@@ -7,6 +7,7 @@ import type {
   CreateOrderReturnDTO,
   OrderOverviewResponseDTO,
   OrderResponseDTO,
+  UpdateOrderStatusDTO,
 } from './types/order.dto';
 import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
 import {
@@ -20,7 +21,7 @@ import type {
 } from 'src/types/util.types';
 
 @Controller('order')
-@Roles(['CUSTOMER'])
+@Roles(['CUSTOMER', 'ADMIN'])
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
@@ -52,9 +53,6 @@ export class OrderController {
     return this.orderService.findOne(+id, BigInt(request.user!.id));
   }
 
-  // returns end points
-
-  // create return
   @Post('return')
   createReturn(
     @Body(new ZodValidationPipe(createReturnDTOValidationSchema))
@@ -66,4 +64,28 @@ export class OrderController {
       BigInt(request.user!.id),
     );
   }
+
+  @Roles(['ADMIN'])
+  @Post(':id/complete')
+  completeOrder(
+    @Param('id') id: string,
+  ): Promise<OrderOverviewResponseDTO> {
+    return this.orderService.completeOrder(id);
+  };
+
+  @Roles(['ADMIN'])
+  @Post(':id/pick-return')
+  pickReturn(
+    @Param('id') id: string,
+  ): Promise<OrderOverviewResponseDTO> {
+    return this.orderService.pickReturn(id);
+  };
+
+  @Roles(['ADMIN'])
+  @Post(':id/refund-return')
+  refundReturn(
+    @Param('id') id: string,
+  ): Promise<OrderOverviewResponseDTO> {
+    return this.orderService.refundReturn(id);
+  };
 }

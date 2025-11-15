@@ -1,8 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import type {
   CreateOrderDTO,
   CreateOrderReturnDTO,
   OrderOverviewResponseDTO,
+  UpdateOrderStatusDTO,
+  UpdateReturnDTO,
 } from './types/order.dto';
 import { DatabaseService } from '../database/database.service';
 import { MoneyUtil } from 'src/utils/money.util';
@@ -75,10 +77,12 @@ export class OrderService {
   ): Promise<PaginatedResult<OrderOverviewResponseDTO>> {
     return this.prismaService.$transaction(async (prisma) => {
       const pagination = this.prismaService.handleQueryPagination(query);
-
+      const orderBy = this.prismaService.handleSortByQuery(query);
+      
       const orders = await prisma.order.findMany({
         ...removeFields(pagination, ['page']),
         where: { userId },
+        orderBy,
         include: {
           orderProducts: true,
           orderReturns: true,
@@ -111,15 +115,103 @@ export class OrderService {
     });
   }
 
-  // update(id: number, updateOrderDto: UpdateOrderDto) {
-  //   return `This action updates a #${id} order`;
-  // }
+  async completeOrder(id: string): Promise<OrderOverviewResponseDTO> {
 
+      return await this.prismaService.$transaction(async(tx) => {
+          const order = await tx.order.findUniqueOrThrow({
+            where: { id: BigInt(id) },
+          });
+
+          if(order.orderStatus === "SUCCESS")  throw new ConflictException(`Order is already completed`);
+
+          const update = await tx.order.update({
+            where: {id: BigInt(id)},
+            data: {
+              orderStatus: 'SUCCESS',
+              updatedAt: new Date()
+            },
+            include: {
+              orderProducts: true,
+              orderReturns: true,
+              transactions: true,
+            }
+          });
+
+          return update;
+      })
+  }
+
+  async pickReturn(id: string): Promise<OrderOverviewResponseDTO> {
+    return await this.prismaService.$transaction(async(tx) => {
+      const orderReturn = await tx.orderReturn.findUniqueOrThrow({
+        where: { id: BigInt(id) },
+      });
+
+      if(orderReturn.status === "PICKED")  throw new ConflictException(`Return is already picked`);
+      if(orderReturn.status === "REFUND")  throw new ConflictException(`Return is already refund`);
+
+      await tx.orderReturn.update({
+        where: {
+          id: BigInt(id)
+        },
+        data: {
+          status: 'PICKED',
+          updatedAt: new Date(),
+        },
+      });
+
+      const order = await tx.order.findUniqueOrThrow({
+        where: {
+          id: orderReturn.orderId,
+        },
+        include: {
+          orderProducts: true,
+          orderReturns: true,
+          transactions: true,
+        }
+      });
+
+      return order;
+    });
+  }
+
+  async refundReturn(id: string): Promise<OrderOverviewResponseDTO> {
+    return await this.prismaService.$transaction(async(tx) => {
+      const orderReturn = await tx.orderReturn.findUniqueOrThrow({
+        where: { id: BigInt(id) },
+      });
+
+      if(orderReturn.status === "PENDING")  throw new ConflictException(`You can not refund without pick!`);
+      if(orderReturn.status === "REFUND")  throw new ConflictException(`Return is already refund!`);
+
+      await tx.orderReturn.update({
+        where: {
+          id: BigInt(id)
+        },
+        data: {
+          status: 'REFUND',
+          updatedAt: new Date(),
+        },
+      });
+
+      const order = await tx.order.findUniqueOrThrow({
+        where: {
+          id: orderReturn.orderId,
+        },
+        include: {
+          orderProducts: true,
+          orderReturns: true,
+          transactions: true,
+        }
+      });
+
+      return order;
+    });
+  }
+  
   remove(id: number) {
     return `This action removes a #${id} order`;
   }
-
-  // helper methods
 
   private mapProductDtoToOrderProducts(
     createOrderDTO: CreateOrderDTO,

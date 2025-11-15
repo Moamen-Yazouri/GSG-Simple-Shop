@@ -3,6 +3,7 @@ import { Prisma } from 'generated/prisma';
 export type PaginationQueryType = {
   page?: number;
   limit?: number;
+  sortBy?: "createdAt" | "id";
 };
 
 export type PaginationResponseMeta = {
